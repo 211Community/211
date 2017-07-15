@@ -23,6 +23,8 @@
 #include "global.h"
 #include "keyboard.h"
 #include "proto.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 PRIVATE struct inode * create_file(char * path, int flags);
 PRIVATE int alloc_imap_bit(int dev);
@@ -89,7 +91,7 @@ PUBLIC int do_open()
 
 		char filename[MAX_PATH];
 		struct inode * dir_inode;
-		if (strip_path(filename, pathname, &dir_inode) != 0)
+		if (strip_path(filename,, pathname, &dir_inode) != 0)
 			return -1;
 		pin = get_inode(dir_inode->i_dev, inode_nr);
 	}
@@ -149,8 +151,10 @@ PUBLIC int do_open()
 PRIVATE struct inode * create_file(char * path, int flags)
 {
 	char filename[MAX_PATH];
+	char parentname[MAX_FILENAME_LEN];
 	struct inode * dir_inode;
-	if (strip_path(filename, path, &dir_inode) != 0)
+	struct dir_entry *parent_entry;
+	if (strip_path(filename, parentname, path, &dir_inode) != 0)
 		return 0;
 
 	int inode_nr = alloc_imap_bit(dir_inode->i_dev);
@@ -159,6 +163,9 @@ PRIVATE struct inode * create_file(char * path, int flags)
 	struct inode *newino = new_inode(dir_inode->i_dev, inode_nr,
 					 free_sect_nr);
 
+	//char parent_pathname[MAX_PATH];
+	//parent_pathname = 
+	//parent_entry = search_folder()
 	new_dir_entry(dir_inode, newino->i_num, filename);
 
 	return newino;

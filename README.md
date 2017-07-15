@@ -1,2 +1,1 @@
-# 211
-# 2017.7.15 
+# OS course design of 211

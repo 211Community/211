@@ -59,7 +59,7 @@ PUBLIC int do_unlink()
 
 	char filename[MAX_PATH];
 	struct inode * dir_inode;
-	if (strip_path(filename, pathname, &dir_inode) != 0)
+	if (strip_path(filename,, pathname, &dir_inode) != 0)
 		return -1;
 
 	struct inode * pin = get_inode(dir_inode->i_dev, inode_nr);

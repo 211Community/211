@@ -77,14 +77,16 @@ PUBLIC void back_dir_entry(const char *pathname)
 * @return 1£¨³É¹¦£©/0£¨Ê§°Ü£©
 *****************************************************************************/
 
-PUBLIC bool new_dir_entry(const char *pathname)
+PUBLIC bool new_dir_entry(const char *pathname, const char *foldername)
 {
 	MESSAGE msg;
 
 	msg.type = NEW_DIR_ENTRY;
 
 	msg.PATHNAME = (void*)pathname;
+	msg.NEW_FOLDERNAME = (void*)foldername;
 	msg.NAME_LEN = strlen(pathname);
+	msg.NEW_NAME_LEN = strlen(foldername);
 
 	send_recv(BOTH, TASK_FS, &msg);
 
@@ -105,10 +107,12 @@ PUBLIC bool delete_dir_entry(const char *pathname)
 {
 	MESSAGE msg;
 
-	msg.type = DELETE_DIR_ENTRY;
+	msg.type = NEW_DIR_ENTRY;
 
 	msg.PATHNAME = (void*)pathname;
+	msg.NEW_FOLDERNAME = (void*)foldername;
 	msg.NAME_LEN = strlen(pathname);
+	msg.NEW_NAME_LEN = strlen(foldername);
 
 	send_recv(BOTH, TASK_FS, &msg);
 

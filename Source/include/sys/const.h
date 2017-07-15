@@ -197,10 +197,12 @@ enum msgtype {
 #define	FD		u.m3.m3i1
 #define	PATHNAME	u.m3.m3p1
 #define	PATHNAME_TO	u.m3.m3p2   //移动目标路径
+#define NEW_FOLDERNAME u.m3.m3p2 //或者新文件夹名
 #define	FLAGS		u.m3.m3i1
 #define	NAME_LEN	u.m3.m3i2
 #define	BUF_LEN		u.m3.m3i3
 #define NAME_TO_LEN u.m3.m3i3   //目标路径长度
+#define NEW_NAME_LEN u.m3.m3i3  //或者新文件夹名长度
 #define	CNT		u.m3.m3i2
 #define	REQUEST		u.m3.m3i2
 #define	PROC_NR		u.m3.m3i3
