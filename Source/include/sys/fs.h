@@ -100,7 +100,7 @@ struct inode {
  * @see   dir_entry
  */
 #define	MAX_FILENAME_LEN	12
-#define MAX_FILE_AMOUNT     20
+
 /**
  * @struct dir_entry
  * @brief  Directory Entry
@@ -108,8 +108,6 @@ struct inode {
 struct dir_entry {
 	int	inode_nr;		/**< inode nr. */
 	char	name[MAX_FILENAME_LEN];	/**< Filename */
-	dir_entry *parent = NULL;//父目录项
-	dir_entry *child[MAX_FILE_AMOUNT] = NULL;//子目录项设定最多20
 };
 
 /**

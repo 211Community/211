@@ -55,7 +55,7 @@ PUBLIC int do_stat()
 	struct inode * pin = 0;
 
 	struct inode * dir_inode;
-	if (strip_path(filename,, pathname, &dir_inode) != 0) {
+	if (strip_path(filename, pathname, &dir_inode) != 0) {
 		/* theoretically never fail here
 		 * (it would have failed earlier when
 		 *  search_file() was called)
@@ -92,43 +92,38 @@ PUBLIC int do_stat()
  * @see open()
  * @see do_open()
  *****************************************************************************/
-
 PUBLIC int search_file(char * path)
 {
 	int i, j;
 
-	char filename[MAX_PATH], parentname[MAX_PATH];
+	char filename[MAX_PATH];
 	memset(filename, 0, MAX_FILENAME_LEN);
-	memset(parentname, 0, MAX_FILENAME_LEN);
 	struct inode * dir_inode;
-	if (strip_path(filename, parentname, path, &dir_inode) != 0)
+	if (strip_path(filename, path, &dir_inode) != 0)
 		return 0;
 
 	if (filename[0] == 0)	/* path: "/" */
 		return dir_inode->i_num;
 
 	/**
-	 * 改为先查找父文件夹，以和文件名唯一识别文件
+	 * Search the dir for the file.
 	 */
 	int dir_blk0_nr = dir_inode->i_start_sect;
 	int nr_dir_blks = (dir_inode->i_size + SECTOR_SIZE - 1) / SECTOR_SIZE;
 	int nr_dir_entries =
-		dir_inode->i_size / DIR_ENTRY_SIZE; /**
-								* including unused slots
-								* (the file has been deleted
-								* but the slot is still there)
-								*/
+	  dir_inode->i_size / DIR_ENTRY_SIZE; /**
+					       * including unused slots
+					       * (the file has been deleted
+					       * but the slot is still there)
+					       */
 	int m = 0;
 	struct dir_entry * pde;
 	for (i = 0; i < nr_dir_blks; i++) {
 		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
 		pde = (struct dir_entry *)fsbuf;
-		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++, pde++) {
-			if (memcmp(parentname, pde->name, MAX_FILENAME_LEN) == 0)
-			{
-				if (memcmp(filename, pde->parent->name, MAX_FILENAME_LEN) == 0)
+		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
+			if (memcmp(filename, pde->name, MAX_FILENAME_LEN) == 0)
 				return pde->inode_nr;
-			}
 			if (++m > nr_dir_entries)
 				break;
 		}
@@ -138,65 +133,6 @@ PUBLIC int search_file(char * path)
 
 	/* file not found */
 	return 0;
-}
-
-
-/*****************************************************************************
-*                                search_folder
-*****************************************************************************/
-/**
-* Search the folder and return the dir_entry.
-*
-* @param[in] path The full path of the file to search.
-* @return         Ptr to the dir_entry of the file if successful, otherwise null.
-*
-*****************************************************************************/
-
-PUBLIC struct dir_entry * search_folder(char * path)
-{
-	int i, j;
-
-	char filename[MAX_PATH], parentname[MAX_PATH];
-	memset(filename, 0, MAX_FILENAME_LEN);
-	memset(parentname, 0, MAX_FILENAME_LEN);
-	struct inode * dir_inode;
-	if (strip_path(filename, parentname, path, &dir_inode) != 0)
-		return NULL;
-
-	if (filename[0] == 0)	/* path: "/" */
-		return dir_inode;
-
-	/**
-	* 先查找父文件夹，以和文件名唯一识别文件
-	*/
-	int dir_blk0_nr = dir_inode->i_start_sect;
-	int nr_dir_blks = (dir_inode->i_size + SECTOR_SIZE - 1) / SECTOR_SIZE;
-	int nr_dir_entries =
-		dir_inode->i_size / DIR_ENTRY_SIZE; /**
-											* including unused slots
-											* (the file has been deleted
-											* but the slot is still there)
-											*/
-	int m = 0;
-	struct dir_entry * pde;
-	for (i = 0; i < nr_dir_blks; i++) {
-		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
-		pde = (struct dir_entry *)fsbuf;
-		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++, pde++) {
-			if (memcmp(parentname, pde->name, MAX_FILENAME_LEN) == 0)
-			{
-				if (memcmp(filename, pde->parent->name, MAX_FILENAME_LEN) == 0)
-					return pde;
-			}
-			if (++m > nr_dir_entries)
-				break;
-		}
-		if (m > nr_dir_entries) /* all entries have been iterated */
-			break;
-	}
-
-	/* file not found */
-	return NULL;
 }
 
 /*****************************************************************************
@@ -228,12 +164,11 @@ PUBLIC struct dir_entry * search_folder(char * path)
  * 
  * @return Zero if success, otherwise the pathname is not valid.
  *****************************************************************************/
-PUBLIC int strip_path(char * filename, char *parentname = NULL, const char * pathname,
+PUBLIC int strip_path(char * filename, const char * pathname,
 		      struct inode** ppinode)
 {
 	const char * s = pathname;
 	char * t = filename;
-	char *p = parentname;
 
 	if (s == 0)
 		return -1;
@@ -242,22 +177,8 @@ PUBLIC int strip_path(char * filename, char *parentname = NULL, const char * pat
 		s++;
 
 	while (*s) {		/* check each character */
-		if (*s == '/')						//变换存储父文件名和当前文件名
-		{
-			s++;
-			if (p != NULL)//如果需要保存parentname
-			{
-				memset(p, 0, MAX_FILENAME_LEN);
-				while (*t)
-				{
-					*p++ = *t++;
-				}
-			}
-			p = parentname;
-			t = filename;
-			memset(t, 0, MAX_FILENAME_LEN);
-			}
-		}
+		if (*s == '/')
+			return -1;
 		*t++ = *s++;
 		/* if filename is too long, just truncate it */
 		if (t - filename >= MAX_FILENAME_LEN)
@@ -265,7 +186,7 @@ PUBLIC int strip_path(char * filename, char *parentname = NULL, const char * pat
 	}
 	*t = 0;
 
-	*ppinode = root_inode;//依然保持永远根目录结点
+	*ppinode = root_inode;
 
 	return 0;
 }

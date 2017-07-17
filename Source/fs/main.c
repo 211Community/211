@@ -49,23 +49,6 @@ PUBLIC void task_fs()
 		pcaller = &proc_table[src];
 
 		switch (msgtype) {
-			//新增fs消息处理
-		case ENTER_DIR_ENTRY:
-			fs_msg.RETVAL = do_enter_dir_entry();
-			break;
-		case BACK_DIR_ENTRY:
-			fs_msg.RETVAL = do_back_dir_entry();
-			break;
-		case NEW_DIR_ENTRY:
-			fs_msg.RETVAL = do_new_dir_entry();
-			break;
-		case DELETE_DIR_ENTRY:
-			fs_msg.RETVAL = do_delete_dir_entry();
-			break;
-		case MOVE_DIR_ENTRY:
-			fs_msg.RETVAL = do_move_dir_entry();
-			break;
-
 		case OPEN:
 			fs_msg.FD = do_open();
 			break;
@@ -357,16 +340,12 @@ PRIVATE void mkfs()
 
 	pde->inode_nr = 1;
 	strcpy(pde->name, ".");
-	pde->parent = pde->inode_nr;		//初始化根目录
-	pde->child = NULL;
 
 	/* dir entries of `/dev_tty0~2' */
 	for (i = 0; i < NR_CONSOLES; i++) {
 		pde++;
 		pde->inode_nr = i + 2; /* dev_tty0's inode_nr is 2 */
 		sprintf(pde->name, "dev_tty%d", i);
-		pde->parent = -1;		//不设父子结构
-		pde->child = NULL;
 	}
 	(++pde)->inode_nr = NR_CONSOLES + 2;
 	sprintf(pde->name, "cmd.tar", i);
