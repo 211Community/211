@@ -247,17 +247,18 @@ PUBLIC int strip_path(char * filename, char *parentname, const char * pathname,
 	{		/* check each character */
 		if (*s == '/')						//变换存储父文件名和当前文件名
 		{
+			t = filename;
 			s++;
 			memset(p, 0, MAX_FILENAME_LEN);
 			while (*t)
 			{
-				*p++ = *t++;
+				*(p++) = *(t++);
 			}
 			p = parentname;
 			t = filename;
 			memset(t, 0, MAX_FILENAME_LEN);
 		}
-		*t++ = *s++;
+		*(t++) = *(s++);
 		/* if filename is too long, just truncate it */
 		if (t - filename >= MAX_FILENAME_LEN)
 			break;

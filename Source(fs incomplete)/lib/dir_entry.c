@@ -77,20 +77,20 @@ PUBLIC int back_dir_entry(const char *pathname)
 * @return 1£¨³É¹¦£©/0£¨Ê§°Ü£©
 *****************************************************************************/
 
-PUBLIC int new_dir_entry(const char *pathname, const char *foldername)
+PUBLIC int new_dir_entry(const char *pathname)
 {
 	MESSAGE msg;
 
 	msg.type = NEW_DIR_ENTRY;
 
 	msg.PATHNAME = (void*)pathname;
-	msg.NEW_FOLDERNAME = (void*)foldername;
+	msg.FLAGS = O_CREAT;
 	msg.NAME_LEN = strlen(pathname);
-	msg.NEW_NAME_LEN = strlen(foldername);
 
 	send_recv(BOTH, TASK_FS, &msg);
+	assert(msg.type == SYSCALL_RET);
 
-	return msg.RETVAL;
+	return msg.FD;
 }
 
 /*****************************************************************************

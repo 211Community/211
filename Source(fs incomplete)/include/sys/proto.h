@@ -83,7 +83,7 @@ PUBLIC struct super_block *	get_super_block(int dev);
 /* fs/open.c */
 PUBLIC int		do_open();
 PUBLIC int		do_close();
-PUBLIC struct dir_entry * create_folder(char * path);
+PUBLIC struct inode * create_folder(char * path, int flags);
 
 /* fs/read_write.c */
 PUBLIC int		do_rdwt();

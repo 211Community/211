@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <stddef.h>
 
-PRIVATE struct dir_entry * new_dir_entry(struct inode *dir_inode, int inode_nr, char *filename);
+PRIVATE int write_back(struct dir_entry * folder, int fd);
 
 /*****************************************************************************
 *                               do_enter_dir_entry()
@@ -39,15 +39,23 @@ PRIVATE struct dir_entry * new_dir_entry(struct inode *dir_inode, int inode_nr, 
 
 PUBLIC int do_enter_dir_entry()
 {
-	char *pathname;
-	char *foldername[MAX_FILENAME_LEN], *parentname[MAX_FILENAME_LEN];
-	int name_len;
+
+	char pathname[MAX_PATH];
+
+	/* get parameters from the message */
+	int flags = fs_msg.FLAGS;	/* access mode */
+	int name_len = fs_msg.NAME_LEN;	/* length of filename */
+	int src = fs_msg.source;	/* caller proc nr. */
 	struct dir_entry * folder;
 	struct inode * foldernode;
-	pathname = fs_msg.PATHNAME;
-	name_len = fs_msg.NAME_LEN;
+	char *foldername[MAX_FILENAME_LEN], *parentname[MAX_FILENAME_LEN];
+	assert(name_len < MAX_PATH);
+	phys_copy((void*)va2la(TASK_FS, pathname),
+		(void*)va2la(src, fs_msg.PATHNAME),
+		name_len);
+	pathname[name_len] = 0;
 
-	if (strip_path(foldername, parentname, pathname, &foldernode) == 0)
+	if (strip_path(foldername, parentname, pathname, &foldernode) != 0)
 		return 0;
 	if ((folder = search_folder(pathname)) == NULL)
 		return 0;
@@ -56,7 +64,8 @@ PUBLIC int do_enter_dir_entry()
 	int i = 0;
 	while (folder->child[i] != NULL && i < MAX_FILE_AMOUNT)
 	{
-		printf("%s\n", folder->child[i]->name);
+		printl("%s\n", folder->child[i]->name);
+		i++;
 	}
 	return 1;
 }
@@ -80,7 +89,7 @@ PUBLIC int do_back_dir_entry()
 	pathname = fs_msg.PATHNAME;
 	name_len = fs_msg.NAME_LEN;
 
-	if (strip_path(foldername, parentname, pathname, &foldernode) == 0)
+	if (strip_path(foldername, parentname, pathname, &foldernode) != 0)
 		return 0;
 	if ((folder = search_folder(pathname)) == NULL)
 		return 0;
@@ -89,7 +98,8 @@ PUBLIC int do_back_dir_entry()
 	int i = 0;
 	while (folder->parent->child[i] != NULL && i < MAX_FILE_AMOUNT)
 	{
-		printf("%s\n", folder->parent->child[i]->name);
+		printl("%s\n", folder->parent->child[i]->name);
+		i++;
 	}
 	return 1;
 }
@@ -105,38 +115,130 @@ PUBLIC int do_back_dir_entry()
 
 PUBLIC int do_new_dir_entry()
 {
-	char *pathname, *foldername;
-	char *parentname[MAX_FILENAME_LEN];
-	int name_len, new_name_len;
-	struct dir_entry * folder;
-	struct inode * foldernode;
-	pathname = fs_msg.PATHNAME;
-	name_len = fs_msg.NAME_LEN;
-	foldername = fs_msg.NEW_FOLDERNAME;
-	new_name_len = fs_msg.NEW_NAME_LEN;
+	//char *pathname, *foldername;
+	//char *parentname[MAX_FILENAME_LEN];
+	//int name_len, new_name_len;
+	//struct dir_entry * folder;
+	//struct inode * foldernode;
+	//pathname = fs_msg.PATHNAME;
+	//name_len = fs_msg.NAME_LEN;
+	//foldername = fs_msg.NEW_FOLDERNAME;
+	//new_name_len = fs_msg.NEW_NAME_LEN;
 
-	if (strip_path(foldername, parentname, pathname, &foldernode) == 0)
-		return 0;
-	if ((folder = search_folder(pathname)) == NULL)
-		return 0;
+	//if (strip_path(foldername, parentname, pathname, &foldernode) != 0)
+	//	return 0;
+	//if ((folder = search_folder(pathname)) == NULL)
+	//	return 0;
 
-	//新建子文件夹
-	char *p, *t;
-	p = &pathname[MAX_PATH - 1];
-	t = foldername;
-	while (*p == 0)
-		p--;
-	*(++p) = '/';
-	p++;
-	while (*p == 0 && p - &pathname[0] >= 0)
-	{
-		*(p++) = *(t++);
+	////新建子文件夹
+	//char *p, *t;
+	//p = &pathname[MAX_PATH - 1];
+	//t = foldername;
+	//while (*p == 0)
+	//	p--;
+	//*(++p) = '/';
+	//p++;
+	//while (*p == 0 && p - &pathname[0] >= 0)
+	//{
+	//	*(p++) = *(t++);
+	//}
+
+	//folder = create_folder(pathname);
+	//folder->isfolder = 1;
+
+	//return 1;
+
+	int fd = -1;		/* return value */
+
+	char pathname[MAX_PATH];
+
+	/* get parameters from the message */
+	int flags = fs_msg.FLAGS;	/* access mode */
+	int name_len = fs_msg.NAME_LEN;	/* length of filename */
+	int src = fs_msg.source;	/* caller proc nr. */
+	assert(name_len < MAX_PATH);
+	phys_copy((void*)va2la(TASK_FS, pathname),
+		(void*)va2la(src, fs_msg.PATHNAME),
+		name_len);
+	pathname[name_len] = 0;
+
+	/* find a free slot in PROCESS::filp[] */
+	int i;
+	for (i = 0; i < NR_FILES; i++) {
+		if (pcaller->filp[i] == 0) {
+			fd = i;
+			break;
+		}
+	}
+	if ((fd < 0) || (fd >= NR_FILES))
+		panic("filp[] is full (PID:%d)", proc2pid(pcaller));
+
+	/* find a free slot in f_desc_table[] */
+	for (i = 0; i < NR_FILE_DESC; i++)
+		if (f_desc_table[i].fd_inode == 0)
+			break;
+	if (i >= NR_FILE_DESC)
+		panic("f_desc_table[] is full (PID:%d)", proc2pid(pcaller));
+
+	int inode_nr = search_file(pathname);
+
+	struct inode * pin = 0;
+	if (flags & O_CREAT) {
+		if (inode_nr) {
+			printl("{FS} file exists.\n");
+			return -1;
+		}
+		else {
+			pin = create_folder(pathname, flags);
+		}
+	}
+	else {
+		assert(flags & O_RDWR);
+
+		char filename[MAX_PATH];
+		char parentname[MAX_FILENAME_LEN];
+		struct inode * dir_inode;
+		if (strip_path(filename, parentname, pathname, &dir_inode) != 0)
+			return -1;
+		pin = get_inode(dir_inode->i_dev, inode_nr);
 	}
 
-	folder = create_folder(pathname);
-	folder->isfolder = 1;
+	if (pin) {
+		/* connects proc with file_descriptor */
+		pcaller->filp[fd] = &f_desc_table[i];
 
-	return 1;
+		/* connects file_descriptor with inode */
+		f_desc_table[i].fd_inode = pin;
+
+		f_desc_table[i].fd_mode = flags;
+		f_desc_table[i].fd_cnt = 1;
+		f_desc_table[i].fd_pos = 0;
+
+		int imode = pin->i_mode & I_TYPE_MASK;
+
+		if (imode == I_CHAR_SPECIAL) {
+			MESSAGE driver_msg;
+			driver_msg.type = DEV_OPEN;
+			int dev = pin->i_start_sect;
+			driver_msg.DEVICE = MINOR(dev);
+			assert(MAJOR(dev) == 4);
+			assert(dd_map[MAJOR(dev)].driver_nr != INVALID_DRIVER);
+			send_recv(BOTH,
+				dd_map[MAJOR(dev)].driver_nr,
+				&driver_msg);
+		}
+		else if (imode == I_DIRECTORY) {
+			assert(pin->i_num == ROOT_INODE);
+		}
+		else {
+			assert(pin->i_mode == I_REGULAR);
+		}
+	}
+	else {
+		return -1;
+	}
+
+	return fd;
 }
 
 /*****************************************************************************
@@ -158,7 +260,7 @@ PUBLIC int do_delete_dir_entry()
 	pathname = fs_msg.PATHNAME;
 	name_len = fs_msg.NAME_LEN; 
 
-	if (strip_path(foldername, parentname, pathname, &foldernode) == 0)
+	if (strip_path(foldername, parentname, pathname, &foldernode) != 0)
 		return 0;
 	if ((folder = search_folder(pathname)) == NULL)
 		return 0;
@@ -460,12 +562,12 @@ PUBLIC int do_move_dir_entry()
 	name_to_len = fs_msg.NAME_TO_LEN;
 
 	//进行文件夹转移
-	if (strip_path(foldername, parentname, pathname, &foldernode) == 0)
+	if (strip_path(foldername, parentname, pathname, &foldernode) != 0)
 		return 0;
 	if ((folder = search_folder(pathname)) == NULL)
 		return 0;
 
-	if (strip_path(foldername_to, parentname_to, pathname_to, &folder_tonode) == 0)
+	if (strip_path(foldername_to, parentname_to, pathname_to, &folder_tonode) != 0)
 		return 0;
 	if ((folder_to = search_folder(pathname_to)) == NULL)
 		return 0;
@@ -487,4 +589,3 @@ PUBLIC int do_move_dir_entry()
 
 	return 1;
 }
-

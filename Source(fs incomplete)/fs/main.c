@@ -111,6 +111,11 @@ PUBLIC void task_fs()
 		/* msg_name[FORK]   = "FORK"; */
 		/* msg_name[EXIT]   = "EXIT"; */
 		/* msg_name[STAT]   = "STAT"; */
+		msg_name[ENTER_DIR_ENTRY] = "ENTER_DIR_ENTRY";
+		msg_name[BACK_DIR_ENTRY] = "BACK_DIR_ENTRY";
+		msg_name[NEW_DIR_ENTRY] = "NEW_DIR_ENTRY";
+		msg_name[DELETE_DIR_ENTRY] = "DELETE_DIR_ENTRY";
+		msg_name[MOVE_DIR_ENTRY] = "MOVE_DIR_ENTRY";
 
 		switch (msgtype) {
 		case UNLINK:
@@ -127,6 +132,12 @@ PUBLIC void task_fs()
 		case STAT:
 			break;
 		case RESUME_PROC:
+			break;
+		case ENTER_DIR_ENTRY:
+		case BACK_DIR_ENTRY:
+		case NEW_DIR_ENTRY:
+		case DELETE_DIR_ENTRY:
+		case MOVE_DIR_ENTRY:
 			break;
 		default:
 			assert(0);
@@ -380,6 +391,7 @@ PRIVATE void mkfs()
 	(++pde)->inode_nr = NR_CONSOLES + 2;
 	sprintf(pde->name, "cmd.tar", i);
 	WR_SECT(ROOT_DEV, sb.n_1st_sect);
+
 }
 
 /*****************************************************************************

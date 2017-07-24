@@ -194,6 +194,7 @@ PRIVATE struct inode * create_file(char * path, int flags)
 	}
 	parent_entry->child[i] = new_dir_entry(dir_inode, newino->i_num, filename);
 	parent_entry->child[i]->parent = parent_entry;
+	parent_entry->child[i]->isfolder = 0;
 
 	return newino;
 }
@@ -208,7 +209,7 @@ PRIVATE struct inode * create_file(char * path, int flags)
 * @return 新文件项的指针
 *****************************************************************************/
 
-PUBLIC struct dir_entry * create_folder(char * path)
+PUBLIC struct inode * create_folder(char * path, int flags)
 {
 	char filename[MAX_FILENAME_LEN];
 	char parentname[MAX_FILENAME_LEN];
@@ -253,8 +254,9 @@ PUBLIC struct dir_entry * create_folder(char * path)
 	}
 	parent_entry->child[i] = new_dir_entry(dir_inode, newino->i_num, filename);
 	parent_entry->child[i]->parent = parent_entry;
+	parent_entry->child[i]->isfolder = 1;
 
-	return parent_entry->child[i];
+	return newino;
 }
 
 
