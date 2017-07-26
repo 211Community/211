@@ -163,8 +163,8 @@ PUBLIC struct dir_entry * search_folder(char * path)
 	if (strip_path(filename, parentname, path, &dir_inode) != 0)
 		return 0;
 
-	if (filename[0] == 0)	/* path: "/" */
-		return dir_inode;
+	//if (filename[0] == 0)	/* path: "/" */
+	//	return dir_inode;
 
 	/**
 	* 先查找父文件夹，以和文件名唯一识别文件
@@ -183,7 +183,7 @@ PUBLIC struct dir_entry * search_folder(char * path)
 		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
 		pde = (struct dir_entry *)fsbuf;
 		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++, pde++) {
-			if (memcmp(parentname, pde->parent->name, MAX_FILENAME_LEN) == 0)
+			if (memcmp(parentname, pde->parent->name, MAX_FILENAME_LEN) == 0 || filename[0] == '.')
 			{
 				if (memcmp(filename, pde->name, MAX_FILENAME_LEN) == 0)
 					return pde;

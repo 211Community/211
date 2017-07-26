@@ -30,7 +30,7 @@ PRIVATE struct inode * create_file(char * path, int flags);
 PRIVATE int alloc_imap_bit(int dev);
 PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc);
 PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect);
-PRIVATE struct dir_entry * new_dir_entry(struct inode *dir_inode, int inode_nr, char *filename);
+PRIVATE struct dir_entry * new_dir_entry(struct inode *dir_inode, int inode_nr, char *filename, struct dir_entry * parent_entry);
 
 /*****************************************************************************
  *                                do_open
@@ -45,7 +45,7 @@ PUBLIC int do_open()
 	int fd = -1;		/* return value */
 
 	char pathname[MAX_PATH];
-
+	memset(pathname, 0, MAX_PATH);
 	/* get parameters from the message */
 	int flags = fs_msg.FLAGS;	/* access mode */
 	int name_len = fs_msg.NAME_LEN;	/* length of filename */
@@ -171,7 +171,7 @@ PRIVATE struct inode * create_file(char * path, int flags)
 
 	while (*t == 0)
 		t--;
-	while (*p == 0)
+	while (*p != *t)
 		p--;
 	while (*t == *p  && t - &filename[0] >= 0)
 	{
@@ -179,6 +179,9 @@ PRIVATE struct inode * create_file(char * path, int flags)
 		p--;
 		t--;
 	}
+	*p-- = 0;
+	if (parentpath[0] == 0)
+		parentpath[0] = '.';
 
 	parent_entry = search_folder(parentpath);
 
@@ -192,7 +195,7 @@ PRIVATE struct inode * create_file(char * path, int flags)
 	{
 		i++;
 	}
-	parent_entry->child[i] = new_dir_entry(dir_inode, newino->i_num, filename);
+	parent_entry->child[i] = new_dir_entry(dir_inode, newino->i_num, filename, parent_entry);
 	parent_entry->child[i]->parent = parent_entry;
 	parent_entry->child[i]->isfolder = 0;
 
@@ -231,7 +234,7 @@ PUBLIC struct inode * create_folder(char * path, int flags)
 
 	while (*t == 0)
 		t--;
-	while (*p == 0)
+	while (*p != *t)
 		p--;
 	while (*t == *p  && t - &filename[0] >= 0)
 	{
@@ -239,6 +242,9 @@ PUBLIC struct inode * create_folder(char * path, int flags)
 		p--;
 		t--;
 	}
+	*p-- = 0;
+	if (parentpath[0] == 0)
+		parentpath[0] = '.';
 
 	parent_entry = search_folder(parentpath);
 
@@ -252,7 +258,7 @@ PUBLIC struct inode * create_folder(char * path, int flags)
 	{
 		i++;
 	}
-	parent_entry->child[i] = new_dir_entry(dir_inode, newino->i_num, filename);
+	parent_entry->child[i] = new_dir_entry(dir_inode, newino->i_num, filename, parent_entry);
 	parent_entry->child[i]->parent = parent_entry;
 	parent_entry->child[i]->isfolder = 1;
 
@@ -462,7 +468,7 @@ PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect)
  * @param inode_nr   I-node nr of the new file.
  * @param filename   Filename of the new file.
  *****************************************************************************/
-PRIVATE struct dir_entry * new_dir_entry(struct inode *dir_inode,int inode_nr,char *filename)
+PRIVATE struct dir_entry * new_dir_entry(struct inode *dir_inode, int inode_nr, char *filename, struct dir_entry * parent_entry)
 {
 	/* write the dir_entry */
 	int dir_blk0_nr = dir_inode->i_start_sect;
@@ -482,12 +488,21 @@ PRIVATE struct dir_entry * new_dir_entry(struct inode *dir_inode,int inode_nr,ch
 	for (i = 0; i < nr_dir_blks; i++) {
 		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
 
-		pde = (struct dir_entry *)fsbuf;
+		pde = (struct dir_entry *)fsbuf;//因为cmd.tar的存在需要读两次才能正确识别
 		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
 			if (++m > nr_dir_entries)
 				break;
 
-			if (pde->inode_nr == 0) { /* it's a free slot */
+			if (pde->inode_nr == 0 && j != 0) { /* it's a free slot */
+				new_de = pde;
+				break;
+			}
+		}
+		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++, pde++) {
+			if (++m > nr_dir_entries)
+				break;
+
+			if (pde->inode_nr == 0 && j != 0) { /* it's a free slot */
 				new_de = pde;
 				break;
 			}
@@ -502,7 +517,7 @@ PRIVATE struct dir_entry * new_dir_entry(struct inode *dir_inode,int inode_nr,ch
 	}
 	new_de->inode_nr = inode_nr;
 	strcpy(new_de->name, filename);
-	new_de->parent = 0;
+	new_de->parent = parent_entry;
 	new_de->isfolder = 0;
 	for (i = 0; i < MAX_FILE_AMOUNT; i++)
 	{
