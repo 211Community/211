@@ -381,15 +381,25 @@ PRIVATE void mkfs()
 		pde->inode_nr = i + 2; /* dev_tty0's inode_nr is 2 */
 		sprintf(pde->name, "dev_tty%d", i);
 		pde->isfolder = 0;
-		pde->parent = root;		//不设父子结构
-
+		pde->parent = root;	
+		//不设子结构
 		for (j = 0; j < MAX_FILE_AMOUNT; j++)
 		{
 			pde->child[i] = 0;
 		}
+		root->child[i] = pde;
 	}
-	(++pde)->inode_nr = NR_CONSOLES + 2;
+	pde++;
+	pde->inode_nr = NR_CONSOLES + 2;
 	sprintf(pde->name, "cmd.tar", i);
+	pde->parent = root;
+	pde->isfolder = 0;
+	for (j = 0; j < MAX_FILE_AMOUNT; j++)
+	{
+		pde->child[i] = 0;
+	}
+	root->child[3] = pde;
+
 	WR_SECT(ROOT_DEV, sb.n_1st_sect);
 
 }

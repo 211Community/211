@@ -190,7 +190,7 @@ PRIVATE struct inode * create_file(char * path, int flags)
 					  NR_DEFAULT_FILE_SECTS);
 	struct inode *newino = new_inode(dir_inode->i_dev, inode_nr,
 					 free_sect_nr);
-
+	i = 0;
 	while (parent_entry->child[i] != 0 && i < MAX_FILE_AMOUNT)
 	{
 		i++;
@@ -253,7 +253,7 @@ PUBLIC struct inode * create_folder(char * path, int flags)
 		NR_DEFAULT_FILE_SECTS);
 	struct inode *newino = new_inode(dir_inode->i_dev, inode_nr,
 		free_sect_nr);
-
+	i = 0;
 	while (parent_entry->child[i] != 0 && i < MAX_FILE_AMOUNT)
 	{
 		i++;
@@ -488,17 +488,8 @@ PRIVATE struct dir_entry * new_dir_entry(struct inode *dir_inode, int inode_nr, 
 	for (i = 0; i < nr_dir_blks; i++) {
 		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
 
-		pde = (struct dir_entry *)fsbuf;//因为cmd.tar的存在需要读两次才能正确识别
+		pde = (struct dir_entry *)fsbuf;
 		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
-			if (++m > nr_dir_entries)
-				break;
-
-			if (pde->inode_nr == 0 && j != 0) { /* it's a free slot */
-				new_de = pde;
-				break;
-			}
-		}
-		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++, pde++) {
 			if (++m > nr_dir_entries)
 				break;
 
