@@ -30,7 +30,7 @@ PRIVATE struct inode * create_file(char * path, int flags);
 PRIVATE int alloc_imap_bit(int dev);
 PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc);
 PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect);
-PRIVATE struct dir_entry * new_dir_entry(struct inode *dir_inode, int inode_nr, char *filename, struct dir_entry * parent_entry);
+PRIVATE void new_dir_entry(struct inode *dir_inode, int inode_nr, char *filename, const char* parentpath, int isfolder);
 
 /*****************************************************************************
  *                                do_open
@@ -190,15 +190,7 @@ PRIVATE struct inode * create_file(char * path, int flags)
 					  NR_DEFAULT_FILE_SECTS);
 	struct inode *newino = new_inode(dir_inode->i_dev, inode_nr,
 					 free_sect_nr);
-	i = 0;
-	while (parent_entry->child[i] != 0 && i < MAX_FILE_AMOUNT)
-	{
-		i++;
-	}
-	parent_entry->child[i] = new_dir_entry(dir_inode, newino->i_num, filename, parent_entry);
-	parent_entry->child[i]->parent = parent_entry;
-	parent_entry->child[i]->isfolder = 0;
-
+	new_dir_entry(dir_inode, newino->i_num, filename, parentpath, 0);
 	return newino;
 }
 
@@ -253,14 +245,7 @@ PUBLIC struct inode * create_folder(char * path, int flags)
 		NR_DEFAULT_FILE_SECTS);
 	struct inode *newino = new_inode(dir_inode->i_dev, inode_nr,
 		free_sect_nr);
-	i = 0;
-	while (parent_entry->child[i] != 0 && i < MAX_FILE_AMOUNT)
-	{
-		i++;
-	}
-	parent_entry->child[i] = new_dir_entry(dir_inode, newino->i_num, filename, parent_entry);
-	parent_entry->child[i]->parent = parent_entry;
-	parent_entry->child[i]->isfolder = 1;
+	new_dir_entry(dir_inode, newino->i_num, filename, parentpath, 1);
 
 	return newino;
 }
@@ -468,58 +453,61 @@ PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect)
  * @param inode_nr   I-node nr of the new file.
  * @param filename   Filename of the new file.
  *****************************************************************************/
-PRIVATE struct dir_entry * new_dir_entry(struct inode *dir_inode, int inode_nr, char *filename, struct dir_entry * parent_entry)
+PRIVATE void new_dir_entry(struct inode *dir_inode, int inode_nr, char *filename, const char* parentpath, int isfolder)
 {
 	/* write the dir_entry */
 	int dir_blk0_nr = dir_inode->i_start_sect;
 	int nr_dir_blks = (dir_inode->i_size + SECTOR_SIZE) / SECTOR_SIZE;
 	int nr_dir_entries =
-		dir_inode->i_size / DIR_ENTRY_SIZE; /**
-						     * including unused slots
-						     * (the file has been
-						     * deleted but the slot
-						     * is still there)
-						     */
+		dir_inode->i_size / DIR_ENTRY_SIZE; /*
+											* including unused slots
+											* (the file has been
+											* deleted but the slot
+											* is still there)
+											*/
 	int m = 0;
 	struct dir_entry * pde;
 	struct dir_entry * new_de = 0;
-
+	struct dir_entry * parent_entry = 0;
 	int i, j;
 	for (i = 0; i < nr_dir_blks; i++) {
-		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
-
+		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
 		pde = (struct dir_entry *)fsbuf;
-		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
+		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++, pde++) {
 			if (++m > nr_dir_entries)
-				break;
-
-			if (pde->inode_nr == 0 && j != 0) { /* it's a free slot */
+				break;
+			if (pde->inode_nr == 0) { /* it's a free slot */
 				new_de = pde;
 				break;
 			}
-		}
+		}
 		if (m > nr_dir_entries ||/* all entries have been iterated or */
-		    new_de)              /* free slot is found */
+			new_de)              /* free slot is found */
 			break;
-	}
+	}
 	if (!new_de) { /* reached the end of the dir */
 		new_de = pde;
 		dir_inode->i_size += DIR_ENTRY_SIZE;
 	}
+
+	i = 0;
+	parent_entry = search_folder(parentpath);
+	while (parent_entry->child[i] != 0 && i < MAX_FILE_AMOUNT)
+	{
+		i++;
+	}
 	new_de->inode_nr = inode_nr;
 	strcpy(new_de->name, filename);
 	new_de->parent = parent_entry;
-	new_de->isfolder = 0;
+	new_de->isfolder = isfolder;
 	for (i = 0; i < MAX_FILE_AMOUNT; i++)
 	{
 		new_de->child[i] = 0;
 	}
 
+	parent_entry->child[i] = new_de;
 	/* write dir block -- ROOT dir block */
-	WR_SECT(dir_inode->i_dev, dir_blk0_nr + i);
-
+	WR_SECT(dir_inode->i_dev, dir_blk0_nr + i);
 	/* update dir inode */
 	sync_inode(dir_inode);
-
-	return new_de;
 }
