@@ -217,7 +217,9 @@ PRIVATE void mkfs()
 	struct dir_entry de;
 	sb.dir_ent_inode_off = (int)&de.inode_nr - (int)&de;
 	sb.dir_ent_fname_off = (int)&de.name - (int)&de;
-
+	sb.dir_ent_isfolder_off = (int)&de.isfolder - (int)&de;
+	sb.dir_ent_cinode_off = (int)&de.child_inode[0] - (int)&de;
+	
 	memset(fsbuf, 0x90, SECTOR_SIZE);
 	memcpy(fsbuf, &sb, SUPER_BLOCK_SIZE);
 
@@ -304,12 +306,25 @@ PRIVATE void mkfs()
 
 	pde->inode_nr = 1;
 	strcpy(pde->name, ".");
+	for (i = 0; i < MAX_FILE_AMOUNT; i++)
+	{
+		pde->child_inode[i] = 0;
+	}	
+	for (i = 0; i < NR_CONSOLES; i++)
+	{
+		pde->child_inode[i] = i + 2;
+	}
 
 	/* dir entries of `/dev_tty0~2' */
 	for (i = 0; i < NR_CONSOLES; i++) {
 		pde++;
 		pde->inode_nr = i + 2; /* dev_tty0's inode_nr is 2 */
 		sprintf(pde->name, "dev_tty%d", i);
+		for (j = 0; j < MAX_FILE_AMOUNT; j++)
+		{
+			pde->child_inode[j] = 0;
+		}
+		//make_relat(0, i + 2);
 	}
 	WR_SECT(ROOT_DEV, sb.n_1st_sect);
 }

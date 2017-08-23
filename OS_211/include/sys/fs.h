@@ -45,6 +45,8 @@ struct super_block {
 	u32	dir_ent_size;     /**< DIR_ENTRY_SIZE */
 	u32	dir_ent_inode_off;/**< Offset of `struct dir_entry::inode_nr' */
 	u32	dir_ent_fname_off;/**< Offset of `struct dir_entry::name' */
+	u32 	dir_ent_isfolder_off;/**< Offset of `struct dir_entry::isfolder' */
+	u32 	dir_ent_cinode_off;/**< Offset of `struct dir_entry::child_inode' */
 
 	/*
 	 * the following item(s) are only present in memory
@@ -102,12 +104,21 @@ struct inode {
 #define	MAX_FILENAME_LEN	12
 
 /**
+ * @def   MAX_FILE_AMOUNT
+ * @brief Max amount of child-file
+ * @see   dir_entry
+ */
+#define	MAX_FILE_AMOUNT		10
+
+/**
  * @struct dir_entry
  * @brief  Directory Entry
  */
 struct dir_entry {
 	int	inode_nr;		/**< inode nr. */
 	char	name[MAX_FILENAME_LEN];	/**< Filename */
+	int	isfolder;		//define the file is folder or not
+	int	child_inode[MAX_FILE_AMOUNT];		//inode_nr of the child files
 };
 
 /**
@@ -146,5 +157,4 @@ struct file_desc {
 				       TASK_FS,				\
 				       fsbuf);
 
-	
 #endif /* _ORANGES_FS_H_ */

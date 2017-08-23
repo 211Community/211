@@ -87,14 +87,21 @@ PUBLIC int		do_unlink();
 
 /* fs/misc.c */
 PUBLIC int		do_stat();
-PUBLIC int		strip_path(char * filename, const char * pathname,
+PUBLIC int		strip_path(char * filename, char *parentname, const char * pathname,
 				   struct inode** ppinode);
 PUBLIC int		search_file(char * path);
+PUBLIC int		search_inode(char * filename);
 
 /* fs/disklog.c */
 PUBLIC int		do_disklog();
 PUBLIC int		disklog(char * logstr); /* for debug */
 PUBLIC void		dump_fd_graph(const char * fmt, ...);
+
+/* fs/entry.c */
+PUBLIC int 		move_relat(int pinode_nr, int cinode_nr, int tinode_nr);
+PUBLIC int 		make_relat(int pinode_nr, int cinode_nr);
+PUBLIC int 		delete_relat(int pinode_nr, int cinode_nr);
+PUBLIC int 		check_relat(int pinode_nr, int cinode_nr);
 
 /* console.c */
 PUBLIC void out_char(CONSOLE* p_con, char ch);
@@ -119,7 +126,7 @@ PUBLIC	void	reset_msg(MESSAGE* p);
 PUBLIC	void	dump_msg(const char * title, MESSAGE* m);
 PUBLIC	void	dump_proc(struct proc * p);
 PUBLIC	int	send_recv(int function, int src_dest, MESSAGE* msg);
-PUBLIC void	inform_int(int task_nr);
+PUBLIC	void	inform_int(int task_nr);
 
 /* lib/misc.c */
 PUBLIC void spin(char * func_name);

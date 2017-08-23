@@ -24,6 +24,7 @@
 #include "hd.h"
 #include "fs.h"
 
+
 /*****************************************************************************
  *                                search_file
  *****************************************************************************/
@@ -38,12 +39,13 @@
  *****************************************************************************/
 PUBLIC int search_file(char * path)
 {
-	int i, j;
+	int i, j, l;
 
 	char filename[MAX_PATH];
+	char parentname[MAX_PATH];
 	memset(filename, 0, MAX_FILENAME_LEN);
 	struct inode * dir_inode;
-	if (strip_path(filename, path, &dir_inode) != 0)
+	if (strip_path(filename, parentname, path, &dir_inode) != 0)
 		return 0;
 
 	if (filename[0] == 0)	/* path: "/" */
@@ -66,6 +68,13 @@ PUBLIC int search_file(char * path)
 		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
 		pde = (struct dir_entry *)fsbuf;
 		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
+			for (l = 0; l < MAX_FILE_AMOUNT; l++)
+			{	
+				printl("%d", pde->child_inode[l]);
+			}
+			printl("%s %s\n", filename, pde->name);
+
+			delay(50);
 			if (memcmp(filename, pde->name, MAX_FILENAME_LEN) == 0)
 				return pde->inode_nr;
 			if (++m > nr_dir_entries)
@@ -108,30 +117,120 @@ PUBLIC int search_file(char * path)
  * 
  * @return Zero if success, otherwise the pathname is not valid.
  *****************************************************************************/
-PUBLIC int strip_path(char * filename, const char * pathname,
+PUBLIC int strip_path(char * filename, char *parentname, const char * pathname,
 		      struct inode** ppinode)
 {
 	const char * s = pathname;
 	char * t = filename;
+	char *p = parentname;
+	int inode_nr;
+	int pinode_nr;
 
+	memset(t, 0, MAX_PATH);
+	memset(p, 0, MAX_PATH);
 	if (s == 0)
 		return -1;
 
 	if (*s == '/')
 		s++;
 
-	while (*s) {		/* check each character */
-		if (*s == '/')
-			return -1;
-		*t++ = *s++;
+	while (*s) 
+	{/* check each character */
+		if (*s == '/')	//变换存储父文件名和当前文件名
+		{
+			t = filename;
+			s++;
+			memset(p, 0, MAX_FILENAME_LEN);
+			while (*t)
+			{
+				*(p++) = *(t++);
+			}
+			p = parentname;
+			t = filename;
+			memset(t, 0, MAX_FILENAME_LEN);
+		}
+		*(t++) = *(s++);
 		/* if filename is too long, just truncate it */
 		if (t - filename >= MAX_FILENAME_LEN)
 			break;
 	}
 	*t = 0;
+	if (p[0] == 0)
+		p[0] = '.';
+	
+	char parentpath[MAX_PATH];
+	p = &parentpath[MAX_PATH - 1];
+	t = &filename[MAX_FILENAME_LEN - 1];
 
+	while (*p == 0)
+		p--;
+	while (*t == 0)
+		t--;
+	while (*p == *t)
+	{
+		*(p--) = 0;
+		t--;
+	}
+	*(--p) = 0;
+	
+	struct inode * dir_inode = root_inode;
+
+	pinode_nr = search_inode(parentname);
+	//*ppinode = get_inode(dir_inode->i_dev, pinode_nr);
+	
 	*ppinode = root_inode;
-
 	return 0;
 }
+
+/*****************************************************************************
+ *                                search_inode
+ *****************************************************************************/
+/**
+ * Search the file and return the inode_nr.
+ *
+ * @param[in] path The full path of the file to search and the inode of a child file.
+ * @return         Ptr to the i-node of the file if successful, otherwise zero.
+ * 
+ * @see strip_path()
+ *****************************************************************************/
+PUBLIC int search_inode(char * filename)
+{
+	int i, j, l;
+	struct inode * dir_inode;
+
+	/**
+	 * Search the dir for the file.
+	 */
+	dir_inode = root_inode; //search all the files.
+
+	int dir_blk0_nr = dir_inode->i_start_sect;
+	int nr_dir_blks = (dir_inode->i_size + SECTOR_SIZE - 1) / SECTOR_SIZE;
+	int nr_dir_entries =
+	  dir_inode->i_size / DIR_ENTRY_SIZE; /**
+					       * including unused slots
+					       * (the file has been deleted
+					       * but the slot is still there)
+					       */
+	int m = 0;
+	struct dir_entry * pde;
+	for (i = 0; i < nr_dir_blks; i++) {
+		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
+		pde = (struct dir_entry *)fsbuf;
+		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
+			if (memcmp(filename, pde->name, MAX_FILENAME_LEN) == 0)
+			{
+				return pde->inode_nr;
+			}
+			if (++m > nr_dir_entries)
+				break;
+		}
+		if (m > nr_dir_entries) /* all entries have been iterated */
+			break;
+	}
+
+	/* file not found */
+	return 0;
+}
+
+
 

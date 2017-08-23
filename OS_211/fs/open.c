@@ -28,7 +28,7 @@ PRIVATE struct inode * create_file(char * path, int flags);
 PRIVATE int alloc_imap_bit(int dev);
 PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc);
 PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect);
-PRIVATE void new_dir_entry(struct inode * dir_inode, int inode_nr, char * filename);
+PRIVATE void new_dir_entry(struct inode * dir_inode, int inode_nr, int flag, char * filename);
 
 /*****************************************************************************
  *                                do_open
@@ -88,8 +88,9 @@ PUBLIC int do_open()
 		assert(flags & O_RDWR);
 
 		char filename[MAX_PATH];
+		char parentname[MAX_PATH];
 		struct inode * dir_inode;
-		if (strip_path(filename, pathname, &dir_inode) != 0)
+		if (strip_path(filename, parentname, pathname, &dir_inode) != 0)
 			return -1;
 		pin = get_inode(dir_inode->i_dev, inode_nr);
 	}
@@ -151,17 +152,23 @@ PUBLIC int do_open()
 PRIVATE struct inode * create_file(char * path, int flags)
 {
 	char filename[MAX_PATH];
+	char parentname[MAX_PATH];
+
 	struct inode * dir_inode;
-	if (strip_path(filename, path, &dir_inode) != 0)
+	if (strip_path(filename, parentname, path, &dir_inode) != 0)
 		return 0;
 
 	int inode_nr = alloc_imap_bit(dir_inode->i_dev);
 	int free_sect_nr = alloc_smap_bit(dir_inode->i_dev,
 					  NR_DEFAULT_FILE_SECTS);
 	struct inode *newino = new_inode(dir_inode->i_dev, inode_nr,
-					 free_sect_nr);
+					free_sect_nr);
 
-	new_dir_entry(dir_inode, newino->i_num, filename);
+	new_dir_entry(dir_inode, newino->i_num, 0, filename);
+	
+	int pinode_nr = search_inode(parentname);
+	if (make_relat(pinode_nr, inode_nr) != 0)
+		return 0;
 
 	return newino;
 }
@@ -367,7 +374,7 @@ PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect)
  * @param inode_nr   I-node nr of the new file.
  * @param filename   Filename of the new file.
  *****************************************************************************/
-PRIVATE void new_dir_entry(struct inode *dir_inode,int inode_nr,char *filename)
+PRIVATE void new_dir_entry(struct inode *dir_inode,int inode_nr,int flag,char *filename)
 {
 	/* write the dir_entry */
 	int dir_blk0_nr = dir_inode->i_start_sect;
@@ -406,6 +413,11 @@ PRIVATE void new_dir_entry(struct inode *dir_inode,int inode_nr,char *filename)
 		dir_inode->i_size += DIR_ENTRY_SIZE;
 	}
 	new_de->inode_nr = inode_nr;
+	new_de->isfolder = flag;
+	for (j = 0; j < MAX_FILE_AMOUNT; j++)
+	{
+		new_de->child_inode[j] = 0;
+	}
 	strcpy(new_de->name, filename);
 
 	/* write dir block -- ROOT dir block */
@@ -413,4 +425,5 @@ PRIVATE void new_dir_entry(struct inode *dir_inode,int inode_nr,char *filename)
 
 	/* update dir inode */
 	sync_inode(dir_inode);
+	
 }

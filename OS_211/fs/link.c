@@ -58,8 +58,9 @@ PUBLIC int do_unlink()
 	}
 
 	char filename[MAX_PATH];
+	char parentname[MAX_PATH];
 	struct inode * dir_inode;
-	if (strip_path(filename, pathname, &dir_inode) != 0)
+	if (strip_path(filename, parentname, pathname, &dir_inode) != 0)
 		return -1;
 
 	struct inode * pin = get_inode(dir_inode->i_dev, inode_nr);
@@ -74,6 +75,15 @@ PUBLIC int do_unlink()
 	if (pin->i_cnt > 1) {	/* the file was opened */
 		printl("cannot remove file %s, because pin->i_cnt is %d.\n",
 		       pathname, pin->i_cnt);
+		return -1;
+	}
+
+	/* release the relationship */
+	int pinode_nr;
+	pinode_nr = search_inode(parentname);
+	if (delete_relat(pinode_nr, pin->i_num) != 0)
+	{
+		printl("cannot remove file %s, because the parent folder is nowhere.\n", pathname);
 		return -1;
 	}
 
