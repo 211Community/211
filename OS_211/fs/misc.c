@@ -68,13 +68,6 @@ PUBLIC int search_file(char * path)
 		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
 		pde = (struct dir_entry *)fsbuf;
 		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
-			for (l = 0; l < MAX_FILE_AMOUNT; l++)
-			{	
-				printl("%d", pde->child_inode[l]);
-			}
-			printl("%s %s\n", filename, pde->name);
-
-			delay(50);
 			if (memcmp(filename, pde->name, MAX_FILENAME_LEN) == 0)
 				return pde->inode_nr;
 			if (++m > nr_dir_entries)
