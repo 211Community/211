@@ -89,6 +89,7 @@ struct inode {
 	int	i_cnt;		/**< How many procs share this inode  */
 	int	i_num;		/**< inode nr.  */
 	int	p_num;		/**< parent inode nr.  */
+	int	i_lock;		/**< whether the inode is reading/writting  */
 };
 
 /**

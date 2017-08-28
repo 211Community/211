@@ -117,7 +117,6 @@ PUBLIC int do_changeType()
 			return 1;
 	}
 	pde->isfolder = type;
-	printl("%s %d %d.\n", pde->name, pde->isfolder, type);
 
 	pin->i_atime = get_ticks();
 	pin->i_mtime = get_ticks();

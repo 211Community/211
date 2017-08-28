@@ -358,7 +358,9 @@ PRIVATE struct inode * new_inode(int dev, int inode_nr, int pinode_nr, int start
 	new_inode->i_cnt = 1;
 	new_inode->i_num = inode_nr;
 	new_inode->p_num = pinode_nr;
-	//tick from the start of the OS
+	new_inode->i_lock = 0;
+
+	//tick from the restart of the OS
 	new_inode->i_atime = get_ticks();
 	if(new_inode->i_ctime == 0)
 		new_inode->i_ctime = get_ticks();

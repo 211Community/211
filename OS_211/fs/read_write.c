@@ -79,6 +79,12 @@ PUBLIC int do_rdwt()
 		assert((fs_msg.type == READ) || (fs_msg.type == WRITE));
 
 		int pos_end;
+
+		//set lock
+		if(pin->i_lock == 1)
+			return 0;
+		pin->i_lock = 1;
+
 		if (fs_msg.type == READ)
 			pos_end = min(pos + len, pin->i_size);
 		else		/* WRITE */
@@ -136,6 +142,8 @@ PUBLIC int do_rdwt()
 			/* write the updated i-node back to disk */
 			sync_inode(pin);
 		}
+
+		pin->i_lock = 0;
 
 		return bytes_rw;
 	}

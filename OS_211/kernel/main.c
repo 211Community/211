@@ -188,9 +188,7 @@ void TestA()
 	printl("File /bar/baz moved to /foo.\n");
 	
 	/* show files */
-	for (i = 0; i < sizeof(filenames) / sizeof(filenames[0]); i++) {
-		showPro(i);
-	}
+	showPro(0);
 	
 	for (i = 0; i < sizeof(filenames) / sizeof(filenames[0]); i++) {
 		close(i);
