@@ -39,7 +39,7 @@
  *****************************************************************************/
 PUBLIC int search_file(char * path)
 {
-	int i, j, l;
+	int i, j;
 
 	char filename[MAX_PATH];
 	char parentname[MAX_PATH];
@@ -169,7 +169,21 @@ PUBLIC int strip_path(char * filename, char *parentname, const char * pathname,
 	struct inode * dir_inode = root_inode;
 
 	pinode_nr = search_inode(parentname);
-	//*ppinode = get_inode(dir_inode->i_dev, pinode_nr);
+	
+	struct inode * q;
+	struct inode * r = 0;
+	//for (q = &inode_table[0]; q < &inode_table[NR_INODE]; q++) {
+	//	if (q->i_cnt) {	/* not a free slot */
+	//		if ((q->i_dev == root_inode->i_dev) && (q->i_num == inode_nr)) {
+	//			/* this is the inode we want */
+	//			r = q;
+	//			break;
+	//		}
+	//	}
+	//}
+	//if(r == 0)
+	//	return -1;
+	//*ppinode = p;
 	
 	*ppinode = root_inode;
 	return 0;
@@ -188,7 +202,7 @@ PUBLIC int strip_path(char * filename, char *parentname, const char * pathname,
  *****************************************************************************/
 PUBLIC int search_inode(char * filename)
 {
-	int i, j, l;
+	int i, j;
 	struct inode * dir_inode;
 
 	/**

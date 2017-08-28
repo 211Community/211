@@ -27,7 +27,7 @@
 PRIVATE struct inode * create_file(char * path, int flags);
 PRIVATE int alloc_imap_bit(int dev);
 PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc);
-PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect);
+PRIVATE struct inode * new_inode(int dev, int inode_nr, int pinode_nr, int start_sect);
 PRIVATE void new_dir_entry(struct inode * dir_inode, int inode_nr, int flag, char * filename);
 
 /*****************************************************************************
@@ -159,14 +159,14 @@ PRIVATE struct inode * create_file(char * path, int flags)
 		return 0;
 
 	int inode_nr = alloc_imap_bit(dir_inode->i_dev);
+	int pinode_nr = search_inode(parentname);
 	int free_sect_nr = alloc_smap_bit(dir_inode->i_dev,
 					  NR_DEFAULT_FILE_SECTS);
 	struct inode *newino = new_inode(dir_inode->i_dev, inode_nr,
-					free_sect_nr);
+					pinode_nr, free_sect_nr);
 
 	new_dir_entry(dir_inode, newino->i_num, 0, filename);
 	
-	int pinode_nr = search_inode(parentname);
 	if (make_relat(pinode_nr, inode_nr) != 0)
 		return 0;
 
@@ -345,7 +345,7 @@ PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc)
  * 
  * @return  Ptr of the new i-node.
  *****************************************************************************/
-PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect)
+PRIVATE struct inode * new_inode(int dev, int inode_nr, int pinode_nr, int start_sect)
 {
 	struct inode * new_inode = get_inode(dev, inode_nr);
 
@@ -357,6 +357,13 @@ PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect)
 	new_inode->i_dev = dev;
 	new_inode->i_cnt = 1;
 	new_inode->i_num = inode_nr;
+	new_inode->p_num = pinode_nr;
+	//tick from the start of the OS
+	new_inode->i_atime = get_ticks();
+	if(new_inode->i_ctime == 0)
+		new_inode->i_ctime = get_ticks();
+	if(new_inode->i_mtime == 0)
+		new_inode->i_mtime = get_ticks();
 
 	/* write to the inode array */
 	sync_inode(new_inode);

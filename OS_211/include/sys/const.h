@@ -137,7 +137,7 @@ enum msgtype {
 	GET_TICKS, GET_PID,
 
 	/* FS */
-	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,
+	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK, CHANGETYPE, MOVE, SHOWPRO,
 
 	/* FS & TTY */
 	SUSPEND_PROC, RESUME_PROC,
@@ -159,8 +159,11 @@ enum msgtype {
 /* macros for messages */
 #define	FD		u.m3.m3i1
 #define	PATHNAME	u.m3.m3p1
+#define TARGETPATH	u.m3.m3p2
 #define	FLAGS		u.m3.m3i1
+#define TYPE		u.m3.m3i2
 #define	NAME_LEN	u.m3.m3i2
+#define	TARGET_FD	u.m3.m3i2
 #define	CNT		u.m3.m3i2
 #define	REQUEST		u.m3.m3i2
 #define	PROC_NR		u.m3.m3i3

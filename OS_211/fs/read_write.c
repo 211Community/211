@@ -54,6 +54,9 @@ PUBLIC int do_rdwt()
 
 	int imode = pin->i_mode & I_TYPE_MASK;
 
+	//record time
+	pin->i_atime = get_ticks();
+
 	if (imode == I_CHAR_SPECIAL) {
 		int t = fs_msg.type == READ ? DEV_READ : DEV_WRITE;
 		fs_msg.type = t;
@@ -79,7 +82,11 @@ PUBLIC int do_rdwt()
 		if (fs_msg.type == READ)
 			pos_end = min(pos + len, pin->i_size);
 		else		/* WRITE */
+		{
+			//record modified time
+			pin->i_mtime = get_ticks();
 			pos_end = min(pos + len, pin->i_nr_sects * SECTOR_SIZE);
+		}
 
 		int off = pos % SECTOR_SIZE;
 		int rw_sect_min=pin->i_start_sect+(pos>>SECTOR_SIZE_SHIFT);

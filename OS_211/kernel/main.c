@@ -131,6 +131,7 @@ void TestA()
 {
 	int fd;
 	int i, n;
+	int flag = 1;
 
 	char filename[MAX_FILENAME_LEN+1] = "blah";
 	const char bufw[] = "abcde";
@@ -165,17 +166,37 @@ void TestA()
 	/* close */
 	close(fd);
 
-	char * filenames[] = {"/foo", "/bar", "/baz"};
+	char * filenames[] = {"/foo", "/bar", "/bar/baz"};
 
 	/* create files */
 	for (i = 0; i < sizeof(filenames) / sizeof(filenames[0]); i++) {
 		fd = open(filenames[i], O_CREAT | O_RDWR);
 		assert(fd != -1);
 		printl("File created: %s (fd %d)\n", filenames[i], fd);
-		close(fd);
+		//close(fd);
+	}
+	
+	/* change type */
+	flag = changeType(0, T_FOLDER);
+	assert(flag == 0);
+	printl("File /foo type changed.\n");
+
+	/* move file */
+	flag = 1;
+	flag = move(2, 0);
+	assert(flag == 0);
+	printl("File /bar/baz moved to /foo.\n");
+	
+	/* show files */
+	for (i = 0; i < sizeof(filenames) / sizeof(filenames[0]); i++) {
+		showPro(i);
+	}
+	
+	for (i = 0; i < sizeof(filenames) / sizeof(filenames[0]); i++) {
+		close(i);
 	}
 
-	char * rfilenames[] = {"/bar", "/foo", "/baz", "/dev_tty0"};
+	char * rfilenames[] = {"/foo/baz", "/bar", "/foo", "/dev_tty0"};
 
 	/* remove files */
 	for (i = 0; i < sizeof(rfilenames) / sizeof(rfilenames[0]); i++) {

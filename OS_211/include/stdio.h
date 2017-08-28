@@ -26,6 +26,9 @@ void assertion_failure(char *exp, char *file, char *base_file, int line);
 #define	O_CREAT		1
 #define	O_RDWR		2
 
+#define T_FOLDER	1
+#define T_FILE		0
+
 #define SEEK_SET	1
 #define SEEK_CUR	2
 #define SEEK_END	3
@@ -45,6 +48,15 @@ PUBLIC	int	open		(const char *pathname, int flags);
 
 /* lib/close.c */
 PUBLIC	int	close		(int fd);
+
+/* lib/changeType.c */
+PUBLIC	int	changeType	(int fd, int type);
+
+/* lib/showPro.c */
+PUBLIC  int	showPro		(int fd);
+
+/* lib/move.c */
+PUBLIC	int	move		(int fd, int target_fd);
 
 /* lib/read.c */
 PUBLIC int	read		(int fd, void *buf, int count);

@@ -45,7 +45,7 @@ PUBLIC void task_fs()
 		int msgtype = fs_msg.type;
 		int src = fs_msg.source;
 		pcaller = &proc_table[src];
-
+		
 		switch (msgtype) {
 		case OPEN:
 			fs_msg.FD = do_open();
@@ -62,6 +62,15 @@ PUBLIC void task_fs()
 			break;
 		case RESUME_PROC:
 			src = fs_msg.PROC_NR;
+			break;
+		case CHANGETYPE:
+			fs_msg.RETVAL = do_changeType();
+			break;
+		case MOVE:
+			fs_msg.RETVAL = do_move();
+			break;
+		case SHOWPRO:
+			fs_msg.RETVAL = do_showPro();
 			break;
 		/* case LSEEK: */
 		/* 	fs_msg.OFFSET = do_lseek(); */
@@ -101,6 +110,9 @@ PUBLIC void task_fs()
 		case OPEN:
 		case READ:
 		case WRITE:
+		case CHANGETYPE:
+		case MOVE:
+		case SHOWPRO:
 		/* case FORK: */
 		/* case LSEEK: */
 		/* case EXIT: */
@@ -477,8 +489,12 @@ PUBLIC struct inode * get_inode(int dev, int num)
 	q->i_size = pinode->i_size;
 	q->i_start_sect = pinode->i_start_sect;
 	q->i_nr_sects = pinode->i_nr_sects;
+	q->i_ctime = pinode->i_ctime;
+	q->i_atime = pinode->i_atime;
+	q->i_mtime = pinode->i_mtime;
 	return q;
 }
+
 
 /*****************************************************************************
  *                                put_inode
@@ -519,6 +535,9 @@ PUBLIC void sync_inode(struct inode * p)
 	pinode->i_size = p->i_size;
 	pinode->i_start_sect = p->i_start_sect;
 	pinode->i_nr_sects = p->i_nr_sects;
+	pinode->i_ctime = p->i_ctime;
+	pinode->i_atime = p->i_atime;
+	pinode->i_mtime = p->i_mtime;
 	WR_SECT(p->i_dev, blk_nr);
 }
 

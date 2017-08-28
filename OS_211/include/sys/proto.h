@@ -98,10 +98,18 @@ PUBLIC int		disklog(char * logstr); /* for debug */
 PUBLIC void		dump_fd_graph(const char * fmt, ...);
 
 /* fs/entry.c */
+PUBLIC int 		do_move();
+PUBLIC int 		do_changeType();
 PUBLIC int 		move_relat(int pinode_nr, int cinode_nr, int tinode_nr);
 PUBLIC int 		make_relat(int pinode_nr, int cinode_nr);
 PUBLIC int 		delete_relat(int pinode_nr, int cinode_nr);
-PUBLIC int 		check_relat(int pinode_nr, int cinode_nr);
+PUBLIC int 		check_relat(int inode_nr);
+PUBLIC int 		check_child(int inode_nr);
+PUBLIC int 		check_path(int inode_nr, int count);
+
+/* fs/time.c */
+PUBLIC int		do_show_pro();
+PUBLIC int 		get_time(int inode_nr);
 
 /* console.c */
 PUBLIC void out_char(CONSOLE* p_con, char ch);

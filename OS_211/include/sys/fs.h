@@ -79,12 +79,16 @@ struct inode {
 	u32	i_size;		/**< File size */
 	u32	i_start_sect;	/**< The first sector of the data */
 	u32	i_nr_sects;	/**< How many sectors the file occupies */
+	u32	i_ctime;	/**< Last created time */
+	u32	i_mtime;	/**< Last modified time */
+	u32	i_atime;	/**< Last accessed time */
 	u8	_unused[16];	/**< Stuff for alignment */
 
 	/* the following items are only present in memory */
 	int	i_dev;
 	int	i_cnt;		/**< How many procs share this inode  */
 	int	i_num;		/**< inode nr.  */
+	int	p_num;		/**< parent inode nr.  */
 };
 
 /**
