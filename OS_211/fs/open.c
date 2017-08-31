@@ -184,6 +184,36 @@ PRIVATE struct inode * create_file(char * path, int flags)
 PUBLIC int do_close()
 {
 	int fd = fs_msg.FD;
+	
+	//write the parent-child relation to the disk
+	int i,j,l;
+	struct inode * pin = pcaller->filp[fd]->fd_inode;
+	struct inode * dir_inode = root_inode;
+	int dir_blk0_nr = dir_inode->i_start_sect;
+	int nr_dir_blks = (dir_inode->i_size + SECTOR_SIZE - 1) / SECTOR_SIZE;
+	int nr_dir_entries =
+	  dir_inode->i_size / DIR_ENTRY_SIZE; 
+	int m = 0;
+	struct dir_entry * pde;
+
+	for (i = 0; i < nr_dir_blks; i++) {
+		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
+		pde = (struct dir_entry *)fsbuf;
+		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
+			for(l = 0; l < MAX_FILE_AMOUNT; l++)
+			{
+				if (pde->child_inode[l] == pin->i_num)
+				{
+					pin->p_num = pde->inode_nr;
+					break;
+				}
+			}
+			if (++m > nr_dir_entries)
+				break;
+		}
+	}
+	sync_inode(pin);
+
 	put_inode(pcaller->filp[fd]->fd_inode);
 	pcaller->filp[fd]->fd_inode = 0;
 	pcaller->filp[fd] = 0;

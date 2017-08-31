@@ -103,13 +103,16 @@ PUBLIC int 		do_changeType();
 PUBLIC int 		move_relat(int pinode_nr, int cinode_nr, int tinode_nr);
 PUBLIC int 		make_relat(int pinode_nr, int cinode_nr);
 PUBLIC int 		delete_relat(int pinode_nr, int cinode_nr);
-PUBLIC int 		check_relat(int inode_nr);
-PUBLIC int 		check_child(int inode_nr);
-PUBLIC int 		check_path(int inode_nr, int count);
 
 /* fs/time.c */
 PUBLIC int		do_show_pro();
 PUBLIC int 		get_time(int inode_nr);
+
+/* fs/check.c */
+PUBLIC int 		do_check();
+PUBLIC int 		check_relat(int inode_nr);
+PUBLIC int 		check_child(int inode_nr);
+PUBLIC int 		check_path(int inode_nr, int count);
 
 /* console.c */
 PUBLIC void out_char(CONSOLE* p_con, char ch);

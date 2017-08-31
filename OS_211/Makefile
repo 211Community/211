@@ -33,11 +33,11 @@ OBJS		= kernel/kernel.o lib/syscall.o kernel/start.o kernel/main.o\
 			lib/kliba.o lib/klib.o lib/string.o lib/misc.o\
 			lib/open.o lib/read.o lib/write.o lib/close.o lib/unlink.o\
 			lib/getpid.o lib/syslog.o\
-			lib/changeType.o lib/move.o lib/showPro.o\
+			lib/changeType.o lib/move.o lib/showPro.o lib/fs_check.o\
 			fs/main.o fs/open.o fs/misc.o fs/read_write.o\
 			fs/link.o\
 			fs/disklog.o\
-			fs/entry.o fs/time.o
+			fs/entry.o fs/time.o fs/check.o
 DASMOUTPUT	= kernel.bin.asm
 
 # All Phony Targets
@@ -169,6 +169,9 @@ lib/move.o: lib/move.c
 lib/showPro.o: lib/showPro.c
 	$(CC) $(CFLAGS) -o $@ $<
 
+lib/fs_check.o: lib/fs_check.c
+	$(CC) $(CFLAGS) -o $@ $<
+
 fs/main.o: fs/main.c
 	$(CC) $(CFLAGS) -o $@ $<
 
@@ -188,5 +191,8 @@ fs/entry.o: fs/entry.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 fs/time.o: fs/time.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+fs/check.o: fs/check.c
 	$(CC) $(CFLAGS) -o $@ $<
 

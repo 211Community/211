@@ -82,13 +82,13 @@ struct inode {
 	u32	i_ctime;	/**< Last created time */
 	u32	i_mtime;	/**< Last modified time */
 	u32	i_atime;	/**< Last accessed time */
+	u32	p_num;		/**< parent inode nr.  */
 	u8	_unused[16];	/**< Stuff for alignment */
 
 	/* the following items are only present in memory */
 	int	i_dev;
 	int	i_cnt;		/**< How many procs share this inode  */
 	int	i_num;		/**< inode nr.  */
-	int	p_num;		/**< parent inode nr.  */
 	int	i_lock;		/**< whether the inode is reading/writting  */
 };
 
@@ -99,7 +99,7 @@ struct inode {
  * Note that this is the size of the struct in the device, \b NOT in memory.
  * The size in memory is larger because of some more members.
  */
-#define	INODE_SIZE	32
+#define	INODE_SIZE	64
 
 /**
  * @def   MAX_FILENAME_LEN

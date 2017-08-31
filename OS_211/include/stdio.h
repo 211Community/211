@@ -55,6 +55,9 @@ PUBLIC	int	changeType	(int fd, int type);
 /* lib/showPro.c */
 PUBLIC  int	showPro		(int fd);
 
+/* lib/fs_check.c */
+PUBLIC  int	fs_check	(int fd);
+
 /* lib/move.c */
 PUBLIC	int	move		(int fd, int target_fd);
 

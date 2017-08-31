@@ -1,7 +1,7 @@
 /*************************************************************************//**
  *****************************************************************************
  * @file   time.c
- * @brief  
+ * @brief  The operations of fs about time and other properties.
  * @author 
  * @date   
  *****************************************************************************
@@ -38,7 +38,7 @@ PUBLIC int do_showPro()
 	       (pcaller->filp[fd] < &f_desc_table[NR_FILE_DESC]));
 
 	if (!(pcaller->filp[fd]->fd_mode & O_RDWR))
-		return 0;
+		return 1;
 
 	int pos = pcaller->filp[fd]->fd_pos;
 	struct inode * pin = pcaller->filp[fd]->fd_inode;

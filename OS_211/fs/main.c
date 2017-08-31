@@ -72,6 +72,9 @@ PUBLIC void task_fs()
 		case SHOWPRO:
 			fs_msg.RETVAL = do_showPro();
 			break;
+		case CHECK:
+			fs_msg.RETVAL = do_check();
+			break;
 		/* case LSEEK: */
 		/* 	fs_msg.OFFSET = do_lseek(); */
 		/* 	break; */
@@ -113,6 +116,7 @@ PUBLIC void task_fs()
 		case CHANGETYPE:
 		case MOVE:
 		case SHOWPRO:
+		case CHECK:
 		/* case FORK: */
 		/* case LSEEK: */
 		/* case EXIT: */
@@ -492,6 +496,7 @@ PUBLIC struct inode * get_inode(int dev, int num)
 	q->i_ctime = pinode->i_ctime;
 	q->i_atime = pinode->i_atime;
 	q->i_mtime = pinode->i_mtime;
+	q->p_num = pinode->p_num;
 	return q;
 }
 
@@ -538,6 +543,7 @@ PUBLIC void sync_inode(struct inode * p)
 	pinode->i_ctime = p->i_ctime;
 	pinode->i_atime = p->i_atime;
 	pinode->i_mtime = p->i_mtime;
+	pinode->p_num = p->p_num;
 	WR_SECT(p->i_dev, blk_nr);
 }
 

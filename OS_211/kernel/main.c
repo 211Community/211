@@ -166,7 +166,7 @@ void TestA()
 	/* close */
 	close(fd);
 
-	char * filenames[] = {"/foo", "/bar", "/bar/baz"};
+	char * filenames[] = {"/foo", "/bar", "/baz"};
 
 	/* create files */
 	for (i = 0; i < sizeof(filenames) / sizeof(filenames[0]); i++) {
@@ -185,10 +185,14 @@ void TestA()
 	flag = 1;
 	flag = move(2, 0);
 	assert(flag == 0);
-	printl("File /bar/baz moved to /foo.\n");
+	printl("File /baz moved to /foo.\n");
 	
 	/* show files */
 	showPro(0);
+
+	for (i = 0; i < sizeof(filenames) / sizeof(filenames[0]); i++) {
+		fs_check(i);
+	}
 	
 	for (i = 0; i < sizeof(filenames) / sizeof(filenames[0]); i++) {
 		close(i);
