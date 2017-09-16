@@ -115,6 +115,13 @@ struct inode {
  */
 #define	MAX_FILE_AMOUNT		10
 
+ /**
+ * @def   MAX_FILE_DEEPTH
+ * @brief Max deepth of parent-child relation
+ * @see   check.c
+ */
+#define	MAX_FILE_DEEPTH		10
+
 /**
  * @struct dir_entry
  * @brief  Directory Entry

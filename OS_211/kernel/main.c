@@ -129,6 +129,7 @@ PUBLIC int get_ticks()
  *======================================================================*/
 void TestA()
 {
+	
 	int fd;
 	int i, n;
 	int flag = 1;
@@ -189,9 +190,11 @@ void TestA()
 	
 	/* show files */
 	showPro(0);
-
+	
+	int condition;
 	for (i = 0; i < sizeof(filenames) / sizeof(filenames[0]); i++) {
-		fs_check(i);
+		condition = fs_check(i);
+		printl("FD: %d -> condition code = %d.\n", i, condition);
 	}
 	
 	for (i = 0; i < sizeof(filenames) / sizeof(filenames[0]); i++) {

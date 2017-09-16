@@ -20,6 +20,8 @@
 #include "keyboard.h"
 #include "proto.h"
 
+PRIVATE int calcu_size(int inode_nr);
+
 /*****************************************************************************
  *                                do_showPro
  *****************************************************************************/
@@ -84,30 +86,7 @@ PUBLIC int do_showPro()
 	else
 		printl("file.\n");
 	//show size
-	int size = 0;
-	struct inode * p;
-	struct inode * q = 0;
-	for (i = 0; i < MAX_FILE_AMOUNT; i++)
-	{
-		if (p_pde->child_inode[i] != 0)
-		{
-			q = 0;
-			for (p = &inode_table[0]; p < &inode_table[NR_INODE]; p++) {
-				if (p->i_cnt) {	/* not a free slot */
-					if ((p->i_dev == root_inode->i_dev) && (p->i_num == p_pde->child_inode[i])) {
-						/* this is the inode we want */
-						q = p;
-						break;
-					}
-				}
-			}
-			if (p == &inode_table[NR_INODE] || q == 0)
-				return 1;
-		
-			size += q->i_size;
-		}	
-	}
-	printl("File size: %d.\n", size);
+	printl("File size: %d.\n", calcu_size(p_pde->inode_nr));
 	//show time
 	if(get_time(pin->i_num) != 0)
 		return 1;
@@ -153,7 +132,7 @@ PUBLIC int do_showPro()
  *                                get_time
  *****************************************************************************/
 /**
- * Output all times properties o a file or folder
+ * Output all times properties of a file or folder
  * 
  * @param[in] inode_nr   The inode of the file
  * 
@@ -198,6 +177,94 @@ PUBLIC int get_time(int inode_nr)
 	printl("Last modified time: %dhours %dmins %dsecs %d.\n", hour, min, sec, msec);
 
 	return 0;
+}
+
+/*****************************************************************************
+ *                                calcu_size
+ *****************************************************************************/
+/**
+ * Output the size of a file or folder
+ * 
+ * @param[in] inode_nr   The inode of the file
+ * 
+ * @return size
+ *****************************************************************************/
+PRIVATE int calcu_size(int inode_nr)
+{
+	int size = 0;
+
+	int i,j;
+	struct inode * dir_inode = root_inode;
+	int dir_blk0_nr = dir_inode->i_start_sect;
+	int nr_dir_blks = (dir_inode->i_size + SECTOR_SIZE - 1) / SECTOR_SIZE;
+	int nr_dir_entries =
+	  dir_inode->i_size / DIR_ENTRY_SIZE; /**
+					       * including unused slots
+					       * (the file has been deleted
+					       * but the slot is still there)
+					       */
+	int m = 0, l = 0;
+	struct dir_entry * pde;
+	struct dir_entry * p_pde;
+
+	for (i = 0; i < nr_dir_blks; i++) {
+		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
+		pde = (struct dir_entry *)fsbuf;
+		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
+			if (pde->inode_nr == inode_nr)//use p to get entry of parent
+				p_pde = pde;
+			if (++m > nr_dir_entries)
+				break;
+		}
+		if (m > nr_dir_entries) /* all entries have been iterated */
+			return 0;
+	}
+	if (p_pde == 0)
+		return 0;
+	
+	struct inode * p;
+	struct inode * q = 0;
+	for (l = 0; l < MAX_FILE_AMOUNT; l++)
+	{
+		if (p_pde->child_inode[l] != 0)
+		{
+			q = 0;
+			for (p = &inode_table[0]; p < &inode_table[NR_INODE]; p++) {
+				if (p->i_cnt) {	/* not a free slot */
+					if ((p->i_dev == root_inode->i_dev) && (p->i_num == p_pde->child_inode[l])) {
+						/* this is the inode we want */
+						q = p;
+						break;
+					}
+				}
+			}
+			if (p == &inode_table[NR_INODE] || q == 0)
+				return 0;
+		
+			size += q->i_size;
+			
+			struct dir_entry * c_pde;
+			m = 0;
+			for (i = 0; i < nr_dir_blks; i++) {
+				RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
+				pde = (struct dir_entry *)fsbuf;
+				for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
+					if (pde->inode_nr == p_pde->child_inode[l])//use p to get entry of parent
+						c_pde = pde;
+					if (++m > nr_dir_entries)
+						break;
+				}
+				if (m > nr_dir_entries) /* all entries have been iterated */
+					return 0;
+			}
+			if (c_pde == 0)
+				return 0;
+
+			if (c_pde->isfolder)
+				size += calcu_size(c_pde->inode_nr);
+		}	
+	}
+	return size;
 }
 
 

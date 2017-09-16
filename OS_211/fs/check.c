@@ -74,22 +74,63 @@ PUBLIC int do_check()
 	}
 	if (c_pde == 0)
 		return 1;
+
+	int a,b,c;
+
+	a = check_relat(pin->i_num);
+	b = check_child(pin->i_num);
+	c = check_path(pin->i_num, MAX_FILE_DEEPTH);
 	
-	if (check_relat(pin->i_num))
+	/*if (a = check_relat(pin->i_num))
 		printl("The relation of %s has been written to disk.\n", c_pde->name);
 	else
 		printl("The relation of %s has not been written to disk.\n", c_pde->name);
 
-	if (check_child(pin->i_num))
+	if (b = check_child(pin->i_num))
 		printl("File %s has child files.\n", c_pde->name);
 	else
 		printl("File %s has no child file.\n", c_pde->name);
-	if (check_path(pin->i_num, 10))
+	if (c = check_path(pin->i_num, MAX_FILE_DEEPTH))
 		printl("File %s is related to root.\n", c_pde->name);
 	else
-		printl("File %s is not related to root.\n", c_pde->name);
+		printl("File %s is not related to root.\n", c_pde->name);*/
 
-	return 0;
+	if (a)
+	{
+		if (b)
+		{
+			if (c)
+				return 0;//111
+			else
+				return 1;//110
+		}
+		else
+		{
+			if (c)
+				return 2;//101
+			else
+				return 3;//100
+		}
+	}
+	else
+	{
+		if (b)
+		{
+			if (c)
+				return 4;//011
+			else
+				return 5;//010
+		}
+		else
+		{
+			if (c)
+				return 6;//001
+			else
+				return 7;//000
+		}
+	}
+
+	return 7;
 }
 
 /*****************************************************************************

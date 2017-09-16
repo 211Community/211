@@ -384,6 +384,9 @@ PRIVATE struct inode * new_inode(int dev, int inode_nr, int pinode_nr, int start
 	new_inode->i_start_sect = start_sect;
 	new_inode->i_nr_sects = NR_DEFAULT_FILE_SECTS;
 
+	if (pinode_nr != new_inode->p_num && new_inode->p_num != 0)
+		printl("Wrong path input!.\n");
+
 	new_inode->i_dev = dev;
 	new_inode->i_cnt = 1;
 	new_inode->i_num = inode_nr;
