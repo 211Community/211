@@ -114,6 +114,11 @@ PUBLIC int 		check_relat(int inode_nr);
 PUBLIC int 		check_child(int inode_nr);
 PUBLIC int 		check_path(int inode_nr, int count);
 
+/* fs/path.c */
+PUBLIC int		do_getPath();
+PUBLIC int		do_search();
+PUBLIC int		do_rename();
+
 /* console.c */
 PUBLIC void out_char(CONSOLE* p_con, char ch);
 PUBLIC void scroll_screen(CONSOLE* p_con, int direction);

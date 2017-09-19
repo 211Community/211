@@ -208,7 +208,7 @@ PUBLIC int check_relat(int inode_nr)
  * Check whether the file has child files
  *
  * @param[in] inode_nr of file.
- * @return         0 if successful, otherwise 1.
+ * @return         1 if has child, otherwise 0.
  * 
  *****************************************************************************/
 PUBLIC int check_child(int inode_nr)

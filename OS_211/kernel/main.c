@@ -134,7 +134,7 @@ void TestA()
 	int i, n;
 	int flag = 1;
 
-	char filename[MAX_FILENAME_LEN+1] = "blah";
+	char filename[MAX_FILENAME_LEN] = "/blah";
 	const char bufw[] = "abcde";
 	const int rd_bytes = 3;
 	char bufr[rd_bytes];
@@ -197,11 +197,28 @@ void TestA()
 		printl("FD: %d -> condition code = %d.\n", i, condition);
 	}
 	
+	/* rename file */
+	if(rename(2, "newname") == 0)
+		showPro(0);
+
+	/* search by fd */
+	char pathname[MAX_PATH];
+	memset(pathname, 0,MAX_PATH);
+	if(getPath(0, pathname) == 0)
+		printl("Absolute path: %s.\n", pathname);
+
+	/* search by file name */
+	memset(pathname, 0,MAX_PATH);
+	if(search("newname", pathname) == 0)
+		printl("Absolute path: %s.\n", pathname);
+	
+	/* close */
 	for (i = 0; i < sizeof(filenames) / sizeof(filenames[0]); i++) {
 		close(i);
 	}
 
-	char * rfilenames[] = {"/foo/baz", "/bar", "/foo", "/dev_tty0"};
+
+	char * rfilenames[] = {"/foo/newname", "/bar", "/foo", "/dev_tty0"};
 
 	/* remove files */
 	for (i = 0; i < sizeof(rfilenames) / sizeof(rfilenames[0]); i++) {

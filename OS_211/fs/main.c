@@ -75,6 +75,15 @@ PUBLIC void task_fs()
 		case CHECK:
 			fs_msg.RETVAL = do_check();
 			break;
+		case GETPATH:
+			fs_msg.RETVAL = do_getPath();
+			break;
+		case SEARCH:
+			fs_msg.RETVAL = do_search();
+			break;
+		case RENAME:
+			fs_msg.RETVAL = do_rename();
+			break;
 		/* case LSEEK: */
 		/* 	fs_msg.OFFSET = do_lseek(); */
 		/* 	break; */
@@ -101,6 +110,13 @@ PUBLIC void task_fs()
 		msg_name[WRITE]  = "WRITE";
 		msg_name[LSEEK]  = "LSEEK";
 		msg_name[UNLINK] = "UNLINK";
+		msg_name[CHANGETYPE] = "CHANGETYPE";
+		msg_name[MOVE] = "MOVE";
+		msg_name[SHOWPRO] = "SHOWPRO";
+		msg_name[CHECK] = "CHECK";
+		msg_name[GETPATH] = "GETPATH";
+		msg_name[SEARCH] = "SEARCH";
+		msg_name[RENAME] = "RENAME";
 		/* msg_name[FORK]   = "FORK"; */
 		/* msg_name[EXIT]   = "EXIT"; */
 		/* msg_name[STAT]   = "STAT"; */
@@ -117,6 +133,9 @@ PUBLIC void task_fs()
 		case MOVE:
 		case SHOWPRO:
 		case CHECK:
+		case GETPATH:
+		case SEARCH:
+		case RENAME:
 		/* case FORK: */
 		/* case LSEEK: */
 		/* case EXIT: */

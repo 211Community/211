@@ -61,6 +61,15 @@ PUBLIC  int	fs_check	(int fd);
 /* lib/move.c */
 PUBLIC	int	move		(int fd, int target_fd);
 
+/* lib/getPath.c */
+PUBLIC	int	getPath		(int fd, char *pathname);
+
+/* lib/search.c */
+PUBLIC	int	search		(const char *filename, char *pathname);
+
+/* lib/getPath.c */
+PUBLIC	int	rename 		(int fd, const char *filename);
+
 /* lib/read.c */
 PUBLIC int	read		(int fd, void *buf, int count);
 

@@ -116,6 +116,13 @@ PUBLIC int do_changeType()
 		if (m > nr_dir_entries) /* all entries have been iterated */
 			return 1;
 	}
+
+	if(check_child(pde->inode_nr))
+	{
+		printl("Child-file exists, can't change the type of the parent-file.\n");
+		return 1;
+	}
+
 	pde->isfolder = type;
 
 	pin->i_atime = get_ticks();

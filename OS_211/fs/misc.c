@@ -62,20 +62,49 @@ PUBLIC int search_file(char * path)
 					       * (the file has been deleted
 					       * but the slot is still there)
 					       */
-	int m = 0;
+	int m = 0, n = 0;
+	int parent_inode = 0;
+	int child_inode = 0;
 	struct dir_entry * pde;
+
 	for (i = 0; i < nr_dir_blks; i++) {
 		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
 		pde = (struct dir_entry *)fsbuf;
 		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
 			if (memcmp(filename, pde->name, MAX_FILENAME_LEN) == 0)
-				return pde->inode_nr;
+			{
+				child_inode = pde->inode_nr;
+				break;
+			}
 			if (++m > nr_dir_entries)
 				break;
 		}
 		if (m > nr_dir_entries) /* all entries have been iterated */
 			break;
 	}
+
+	m = 0;
+	for (i = 0; i < nr_dir_blks; i++) {
+		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
+		pde = (struct dir_entry *)fsbuf;
+		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
+			if (memcmp(parentname, pde->name, MAX_FILENAME_LEN) == 0)
+			{
+				for(n = 0; n < MAX_FILE_AMOUNT; n++)
+				{
+					if(pde->child_inode[n] == child_inode)
+						return child_inode;
+				}
+					return 0;
+			}
+			if (++m > nr_dir_entries)
+				break;
+		}
+		if (m > nr_dir_entries) /* all entries have been iterated */
+			break;
+	}
+	
+
 
 	/* file not found */
 	return 0;
@@ -151,6 +180,7 @@ PUBLIC int strip_path(char * filename, char *parentname, const char * pathname,
 	if (p[0] == 0)
 		p[0] = '.';
 	
+	//get the path of parent
 	char parentpath[MAX_PATH];
 	p = &parentpath[MAX_PATH - 1];
 	t = &filename[MAX_FILENAME_LEN - 1];
